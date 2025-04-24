@@ -237,8 +237,14 @@ export const handleHostedChat = async (
     signal: newAbortController.signal
   })
 
+  // Получаем JSON ответ
+  const data = await response.json()
+  
+  // Создаем новый Response с текстом из поля reply
+  const textResponse = new Response(data.reply)
+
   return await processResponse(
-    response,
+    textResponse,
     isRegeneration
       ? payload.chatMessages[payload.chatMessages.length - 1]
       : tempAssistantChatMessage,
