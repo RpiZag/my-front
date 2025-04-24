@@ -201,37 +201,34 @@ export const handleHostedChat = async (
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
   setToolInUse: React.Dispatch<React.SetStateAction<string>>
 ) => {
-  const provider =
-    modelData.provider === "openai" && profile.use_azure_openai
-      ? "azure"
-      : modelData.provider
-
   let draftMessages = await buildFinalMessages(payload, profile, chatImages)
 
-  let formattedMessages : any[] = []
-  if (provider === "google") {
-    formattedMessages = await adaptMessagesForGoogleGemini(payload, draftMessages)
-  } else {
-    formattedMessages = draftMessages
+  // Создаем FormData
+  const formData = new FormData()
+  
+  // Добавляем последнее сообщение как message
+  const lastMessage = draftMessages[draftMessages.length - 1]
+  formData.append('message', lastMessage.content)
+  
+  // Добавляем модель
+  formData.append('model', payload.chatSettings.model)
+  
+  // Добавляем web_search_enabled
+  formData.append('web_search_enabled', 'true')
+  
+  // Если есть файлы, добавляем их
+  if (newMessageImages.length > 0) {
+    const file = newMessageImages[0].file
+    if (file) {
+      formData.append('file', file)
+    }
   }
 
-  const apiEndpoint =
-    provider === "custom" ? "/api/chat/custom" : `/api/chat/${provider}`
-
-  const requestBody = {
-    chatSettings: payload.chatSettings,
-    messages: formattedMessages,
-    customModelId: provider === "custom" ? modelData.hostedId : ""
-  }
-
-  const response = await fetchChatResponse(
-    apiEndpoint,
-    requestBody,
-    true,
-    newAbortController,
-    setIsGenerating,
-    setChatMessages
-  )
+  const response = await fetch('https://mygpt-production.up.railway.app/api/chat', {
+    method: 'POST',
+    body: formData,
+    signal: newAbortController.signal
+  })
 
   return await processResponse(
     response,
