@@ -208,7 +208,11 @@ export const handleHostedChat = async (
   
   // Добавляем последнее сообщение как message
   const lastMessage = draftMessages[draftMessages.length - 1]
-  formData.append('message', lastMessage.content)
+  const messageContent = typeof lastMessage.content === 'string' 
+    ? lastMessage.content
+    : lastMessage.content.find(c => c.type === 'text')?.text || ''
+  
+  formData.append('message', messageContent)
   
   // Добавляем модель
   formData.append('model', payload.chatSettings.model)
