@@ -210,7 +210,10 @@ export const handleHostedChat = async (
   const lastMessage = draftMessages[draftMessages.length - 1]
   const messageContent = typeof lastMessage.content === 'string' 
     ? lastMessage.content
-    : lastMessage.content.find(c => c.type === 'text')?.text || ''
+    : lastMessage.content
+        .filter((c: any) => c.type === 'text')
+        .map((c: any) => c.text)
+        .join('\n') || ''
   
   formData.append('message', messageContent)
   
